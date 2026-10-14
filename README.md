@@ -2,6 +2,8 @@
 
 An end-to-end, menu-driven Python application developed as an internship mini-project for **EWB EDUTECH ("Python with AI")**.
 
+**GitHub Repository:** [https://github.com/HareshSubramaniam/studentanalysis](https://github.com/HareshSubramaniam/studentanalysis)
+
 ---
 
 ## 1. Project Overview
@@ -25,7 +27,7 @@ Manual compilation and analysis of student examination marks and attendance acro
 - **Enforce Consistent Grading & Pass Rules:** Implement configurable grade thresholds and enforce subject-specific passing rules (minimum 40 marks in every subject).
 - **Separate Academic Performance from Attendance:** Track attendance deficits (< 75%) separately to ensure fair academic evaluations while flagging compliance warnings.
 - **Provide Actionable Insights:** Deliver immediate statistical breakdowns, including top performers, subject-wise averages, and overall pass percentages.
-- **Maintain High Code Quality:** Build clean, modular, and beginner-friendly code with automated unit testing and robust data validation.
+- **Maintain High Code Quality:** Build clean, modular, and beginner-friendly code with automated unit testing (18 unit tests) and robust data validation.
 
 ---
 
@@ -45,7 +47,7 @@ Manual compilation and analysis of student examination marks and attendance acro
 1. **Tabular Student Record Display:** Full class ledger showing individual subject marks, total score, percentage, grade, pass/fail result, and attendance status.
 2. **Individual Student Report Card:** Instant search by Student ID or Name to view a detailed breakdown of individual marks and eligibility.
 3. **Subject-Wise Analysis:** Calculates average scores for each subject and automatically highlights the highest-performing and lowest-performing subjects.
-4. **Top 3 Performers Recognition:** Identifies and ranks the top 3 academic achievers in the class based on average marks.
+4. **Top 3 Performers Recognition:** Identifies and ranks the top 3 academic achievers in the class based on average marks with deterministic tie-breaking.
 5. **Pass / Fail Statistics:** Calculates total passed students, failed students, and overall pass percentage based on the strict rule that every subject must be passed.
 6. **Attendance Shortage Monitoring:** Analyzes attendance metrics and filters all students with attendance below 75% for mentor follow-up.
 7. **Comprehensive Class Summary:** Executive dashboard displaying class averages, high/low boundaries, pass rate, and subject rankings.
@@ -55,7 +57,7 @@ Manual compilation and analysis of student examination marks and attendance acro
 
 ## 6. Dataset Description
 
-The dataset is stored in `students.csv` and contains realistic sample student records representing diverse performance levels across four departments: Computer Science, Information Technology, AI & Data Science, and Electronics.
+The dataset is stored in `students.csv` and contains 28 realistic sample student records representing diverse performance levels across four departments: Computer Science, Information Technology, AI & Data Science, and Electronics.
 
 ### Dataset Schema:
 | Column Name | Data Type | Range / Format | Description |
@@ -101,11 +103,11 @@ Letter grades are assigned based on the student's average percentage:
 ## 8. Project Structure
 
 ```text
-student-performance-analytics/
+studentanalysis/
 │
 ├── main.py                   # Main CLI entry point and menu controller
 ├── functions.py              # Modular business logic, math calculations & validation
-├── test_analytics.py         # Automated unit test suite (unittest)
+├── test_analytics.py         # Automated unit test suite (18 unit tests)
 ├── students.csv              # Sample student dataset (28 records)
 ├── requirements.txt          # Python external dependencies (pandas, numpy)
 ├── README.md                 # Project documentation and guide
@@ -125,8 +127,10 @@ student-performance-analytics/
 
 ### Step 1: Clone or Navigate to the Project Directory
 ```bash
-cd student-performance-analytics
+git clone https://github.com/HareshSubramaniam/studentanalysis.git
+cd studentanalysis
 ```
+*(Or navigate to your existing local folder `student-performance-analytics`)*
 
 ### Step 2: Create and Activate a Virtual Environment
 - **On Linux / macOS:**
@@ -195,6 +199,9 @@ Rank   ID     Name                   Department         Total   Average  Grade
 #3     S120   Neha Saxena            AI & Data Science  373     93.25    A+
 ---------------------------------------------------------------------------
 ```
+
+### Output Screenshot:
+A verified screenshot of the terminal output from the application run is saved in `screenshots/output.png`.
 
 ---
 

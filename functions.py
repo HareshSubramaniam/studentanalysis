@@ -25,6 +25,7 @@ ATTENDANCE_THRESHOLD = 75.0
 
 
 def load_student_data(filepath):
+    """Load and validate student records from a CSV file."""
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"Error: The dataset file '{filepath}' was not found.")
 
@@ -48,12 +49,20 @@ def load_student_data(filepath):
         problematic_cols = null_counts[null_counts > 0].to_dict()
         raise ValueError(f"Error: Dataset contains missing (NaN) values in columns: {problematic_cols}")
 
+    for text_col in ['Student_ID', 'Name', 'Department']:
+        if df[text_col].astype(str).str.strip().eq('').any():
+            raise ValueError(f"Error: Column '{text_col}' contains blank or whitespace-only values.")
+
+    if df['Student_ID'].duplicated().any():
+        duplicate_ids = df[df['Student_ID'].duplicated()]['Student_ID'].unique().tolist()
+        raise ValueError(f"Error: Duplicate Student_ID(s) found in dataset: {duplicate_ids}")
+
     numeric_columns = SUBJECT_COLUMNS + ['Attendance']
     for col in numeric_columns:
         if not pd.api.types.is_numeric_dtype(df[col]):
             try:
                 df[col] = pd.to_numeric(df[col])
-            except ValueError:
+            except (ValueError, TypeError):
                 raise ValueError(f"Error: Column '{col}' contains non-numeric values.")
 
         out_of_bounds = df[(df[col] < 0) | (df[col] > 100)]
@@ -67,6 +76,7 @@ def load_student_data(filepath):
 
 
 def assign_grade(average_marks):
+    """Assign letter grade based on average percentage."""
     if average_marks >= 90.0:
         return 'A+'
     elif average_marks >= 80.0:
@@ -84,6 +94,7 @@ def assign_grade(average_marks):
 
 
 def determine_result(subject_marks, passing_mark=PASSING_MARK_PER_SUBJECT):
+    """Determine PASS only if every subject mark is at or above passing threshold."""
     for mark in subject_marks:
         if mark < passing_mark:
             return 'FAIL'
@@ -91,12 +102,17 @@ def determine_result(subject_marks, passing_mark=PASSING_MARK_PER_SUBJECT):
 
 
 def check_attendance_status(attendance_percentage, threshold=ATTENDANCE_THRESHOLD):
+    """Flag attendance shortage without failing student academically."""
     if attendance_percentage < threshold:
         return 'LOW (<75%)'
     return 'ADEQUATE'
 
 
 def process_student_performance(df):
+    """Calculate Total, Average, Grade, Result, and Attendance status."""
+    if df is None or df.empty:
+        return pd.DataFrame()
+
     processed_df = df.copy()
     marks_array = processed_df[SUBJECT_COLUMNS].to_numpy()
 
@@ -123,10 +139,11 @@ def process_student_performance(df):
 
 
 def get_class_statistics(df):
-    total_students = len(df)
-    if total_students == 0:
+    """Compute overall class performance statistics."""
+    if df is None or df.empty:
         return {}
 
+    total_students = len(df)
     averages = df['Average'].to_numpy()
     highest_avg = float(np.max(averages))
     lowest_avg = float(np.min(averages))
@@ -150,6 +167,10 @@ def get_class_statistics(df):
 
 
 def get_subject_statistics(df):
+    """Calculate subject-wise average marks and identify best/lowest subjects."""
+    if df is None or df.empty:
+        return {}
+
     subject_averages = {}
     for subject in SUBJECT_COLUMNS:
         subject_marks = df[subject].to_numpy()
@@ -168,15 +189,22 @@ def get_subject_statistics(df):
 
 
 def get_top_performers(df, n=3):
-    sorted_df = df.sort_values(by=['Average', 'Total'], ascending=[False, False])
+    """Return top N performing students sorted by Average, Total, and Student_ID."""
+    if df is None or df.empty:
+        return pd.DataFrame()
+    sorted_df = df.sort_values(by=['Average', 'Total', 'Student_ID'], ascending=[False, False, True])
     return sorted_df.head(n)
 
 
 def get_low_attendance_students(df, threshold=ATTENDANCE_THRESHOLD):
+    """Filter students with attendance below threshold."""
+    if df is None or df.empty:
+        return pd.DataFrame()
     return df[df['Attendance'] < threshold]
 
 
 def display_header(title):
+    """Print standard section header for CLI."""
     border = "=" * 70
     print("\n" + border)
     print(f"  {title.upper()}")
@@ -184,9 +212,13 @@ def display_header(title):
 
 
 def display_all_students(df):
+    """Display tabular view of all student records."""
     display_header("All Student Records")
-    print(f"Total Records: {len(df)}\n")
+    if df is None or df.empty:
+        print("No student records available to display.")
+        return
 
+    print(f"Total Records: {len(df)}\n")
     header = (
         f"{'ID':<6} {'Name':<20} {'Dept':<12} "
         f"{'Math':<5} {'Py':<5} {'AI':<5} {'DB':<5} "
@@ -216,6 +248,11 @@ def display_all_students(df):
 
 
 def display_individual_student_report(df, query):
+    """Display individual student report by ID or Name search."""
+    if df is None or df.empty:
+        print("\n[!] No student records available to search.")
+        return
+
     query_clean = str(query).strip()
     match = df[
         (df['Student_ID'].str.upper() == query_clean.upper()) |
@@ -253,9 +290,13 @@ def display_individual_student_report(df, query):
 
 
 def display_subject_analysis(df):
+    """Display average marks for all subjects and best/lowest performers."""
     display_header("Subject-Wise Performance Analysis")
-    stats = get_subject_statistics(df)
+    if df is None or df.empty:
+        print("No student records available for subject analysis.")
+        return
 
+    stats = get_subject_statistics(df)
     print(f"{'Subject':<30} {'Average Marks':<15}")
     print("-" * 45)
     for sub, avg in stats['subject_averages'].items():
@@ -266,9 +307,13 @@ def display_subject_analysis(df):
 
 
 def display_top_performers(df, n=3):
+    """Display top N students ranked by average marks."""
     display_header(f"Top {n} Performers of the Class")
-    top_df = get_top_performers(df, n=n)
+    if df is None or df.empty:
+        print("No student records available.")
+        return
 
+    top_df = get_top_performers(df, n=n)
     print(f"{'Rank':<6} {'ID':<6} {'Name':<22} {'Department':<18} {'Total':<7} {'Average':<8} {'Grade'}")
     print("-" * 75)
 
@@ -288,9 +333,13 @@ def display_top_performers(df, n=3):
 
 
 def display_pass_fail_statistics(df):
+    """Display overall pass and fail numbers and percentages."""
     display_header("Pass / Fail Statistics")
-    stats = get_class_statistics(df)
+    if df is None or df.empty:
+        print("No student records available for pass/fail statistics.")
+        return
 
+    stats = get_class_statistics(df)
     total = stats['total_students']
     passed = stats['passed_count']
     failed = stats['failed_count']
@@ -306,7 +355,11 @@ def display_pass_fail_statistics(df):
 
 
 def display_attendance_analysis(df):
+    """Display attendance metrics and students below minimum threshold."""
     display_header(f"Attendance Analysis (Threshold: {int(ATTENDANCE_THRESHOLD)}%)")
+    if df is None or df.empty:
+        print("No student records available for attendance analysis.")
+        return
 
     avg_att = float(np.round(np.mean(df['Attendance'].to_numpy()), 2))
     low_att_df = get_low_attendance_students(df, ATTENDANCE_THRESHOLD)
@@ -338,7 +391,12 @@ def display_attendance_analysis(df):
 
 
 def display_class_summary(df):
+    """Display comprehensive class performance overview."""
     display_header("Overall Class Performance Summary")
+    if df is None or df.empty:
+        print("No student records available for class summary.")
+        return
+
     class_stats = get_class_statistics(df)
     sub_stats = get_subject_statistics(df)
 

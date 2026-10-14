@@ -15,10 +15,12 @@ from functions import (
 
 
 def get_dataset_path():
+    """Locate students.csv across common working directory paths."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     candidates = [
         os.path.join(script_dir, "students.csv"),
         os.path.join(os.getcwd(), "students.csv"),
+        os.path.join(os.getcwd(), "studentanalysis", "students.csv"),
         os.path.join(os.getcwd(), "student-performance-analytics", "students.csv")
     ]
     for path in candidates:
@@ -28,6 +30,7 @@ def get_dataset_path():
 
 
 def print_welcome_banner():
+    """Display system title and project banner."""
     print("\n" + "=" * 60)
     print("        STUDENT PERFORMANCE ANALYTICS SYSTEM        ")
     print("      EWB EDUTECH - Python with AI Mini Project      ")
@@ -35,6 +38,7 @@ def print_welcome_banner():
 
 
 def print_menu():
+    """Display CLI navigation menu."""
     print("\n------------------- MAIN MENU -------------------")
     print("1. View all students")
     print("2. View individual student report")
@@ -48,6 +52,7 @@ def print_menu():
 
 
 def main():
+    """Run interactive menu-driven console loop."""
     print_welcome_banner()
 
     dataset_path = get_dataset_path()

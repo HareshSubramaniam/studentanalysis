@@ -20,6 +20,7 @@ from functions import (
 
 
 class TestStudentAnalytics(unittest.TestCase):
+    """Unit test suite for Student Performance Analytics System."""
 
     @classmethod
     def setUpClass(cls):
@@ -163,6 +164,63 @@ class TestStudentAnalytics(unittest.TestCase):
         finally:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
+
+    def test_15_duplicate_student_id_validation(self):
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as tf:
+            tf.write(
+                "Student_ID,Name,Department,Mathematics,Python,Artificial_Intelligence,Database,Attendance\n"
+                "S101,Aarav Sharma,CS,90,90,90,90,90\n"
+                "S101,Duplicate ID,CS,80,80,80,80,80\n"
+            )
+            temp_path = tf.name
+
+        try:
+            with self.assertRaises(ValueError) as ctx:
+                load_student_data(temp_path)
+            self.assertIn("duplicate student_id", str(ctx.exception).lower())
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+
+    def test_16_blank_text_field_validation(self):
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as tf:
+            tf.write(
+                "Student_ID,Name,Department,Mathematics,Python,Artificial_Intelligence,Database,Attendance\n"
+                "S999,   ,CS,80,80,80,80,80\n"
+            )
+            temp_path = tf.name
+
+        try:
+            with self.assertRaises(ValueError) as ctx:
+                load_student_data(temp_path)
+            self.assertIn("blank or whitespace", str(ctx.exception).lower())
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+
+    def test_17_empty_dataframe_analytics(self):
+        empty_df = pd.DataFrame()
+        self.assertEqual(get_class_statistics(empty_df), {})
+        self.assertEqual(get_subject_statistics(empty_df), {})
+        self.assertTrue(get_top_performers(empty_df).empty)
+        self.assertTrue(get_low_attendance_students(empty_df).empty)
+
+    def test_18_ranking_ties_deterministic(self):
+        tie_data = {
+            'Student_ID': ['S202', 'S201'],
+            'Name': ['Student B', 'Student A'],
+            'Department': ['CS', 'CS'],
+            'Mathematics': [80, 80],
+            'Python': [80, 80],
+            'Artificial_Intelligence': [80, 80],
+            'Database': [80, 80],
+            'Attendance': [85.0, 85.0]
+        }
+        tie_df = pd.DataFrame(tie_data)
+        processed = process_student_performance(tie_df)
+        top = get_top_performers(processed, n=2)
+        self.assertEqual(top.iloc[0]['Student_ID'], 'S201')
+        self.assertEqual(top.iloc[1]['Student_ID'], 'S202')
 
 
 if __name__ == "__main__":
